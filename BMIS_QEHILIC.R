@@ -1,29 +1,29 @@
+library(ggplot2)
+library(tidyverse)
 
-#Define all your inputs here
-# samp.key.file <- "Sample_key.csv"
-# is.names.file <- "InternalStandardNames.csv"
-# xcms.dat.pos.file <- "HILICPos_IntegrationsBigPeaksWTargeted2.csv"
-# xcms.dat.neg.file <- "HILICNeg_IntegrationsBigPeaksWTargeted.csv"
-# cut.off <- 0.0 
-# cut.off2 <- 0.00 
+# Define all your inputs here
+samp.key.file <- "Sample_key.csv"
+is.names.file <- "InternalStandardNames.csv"
+xcms.dat.pos.file <- "HILICPos_IntegrationsBigPeaksWTargeted2.csv"
+xcms.dat.neg.file <- "HILICNeg_IntegrationsBigPeaksWTargeted.csv"
+cut.off <- 0.0
+cut.off2 <- 0.00
 
-#Things to return 
-#IS_inspectPlot (plot to make sure there aren't any internal standards we should kick out)
-#QuickReport (% that picked BMIS, with cut off values)
-#ISTest_plot (plot to evaluate if you cut off is appropriate)
-#BMIS_normalizedData (tibble with the info you actually want!)
+# Things to return 
+# IS_inspectPlot (plot to make sure there aren't any internal standards we should kick out)
+# QuickReport (% that picked BMIS, with cut off values)
+# ISTest_plot (plot to evaluate if you cut off is appropriate)
+# BMIS_normalizedData (tibble with the info you actually want!)
 
 
-BMIS <- function(samp.key.file = "MetaData/Sample_key.csv",
-                 is.names.file = "MetaData/InternalStandardNames.csv",
-                 xcms.dat.pos.file = "RawOutput/HILICPos_IntegrationsBigPeaksWTargeted2.csv",
-                 xcms.dat.neg.file = "RawOutput/HILICNeg_IntegrationsBigPeaksWTargeted.csv",
-                 cut.off = 0.0,
-                 cut.off2 = 0.00 ) {
+# BMIS <- function(samp.key.file = "MetaData/Sample_key.csv",
+#                  is.names.file = "MetaData/InternalStandardNames.csv",
+#                  xcms.dat.pos.file = "RawOutput/HILICPos_IntegrationsBigPeaksWTargeted2.csv",
+#                  xcms.dat.neg.file = "RawOutput/HILICNeg_IntegrationsBigPeaksWTargeted.csv",
+#                  cut.off = 0.0,
+#                  cut.off2 = 0.00 ) 
   
-  library(ggplot2)
-  library(tidyverse)
-  
+
 #Import data - set filenames within this chunk for xcms output, sample key, and ISdata
 SampKey_all <- read_csv(samp.key.file) 
 IS_names <- read_csv(is.names.file)
@@ -197,7 +197,7 @@ BMISlist <- list(IS_inspectPlot, QuickReport, ISTest_plot, BMIS_normalizedData)
   
   return(invisible(BMISlist))
   
-}
+
   
   
   
