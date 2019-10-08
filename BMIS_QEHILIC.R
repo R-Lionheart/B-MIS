@@ -1,3 +1,4 @@
+library(data.table)
 library(ggplot2)
 library(tidyverse)
 options(scipen=999)
@@ -210,9 +211,15 @@ ISTest_plot <- ggplot() +
 # Add a column to the longdat that has important information from the FullDat_fixed, 
 # then only return data that is normalized via B-MIS normalization
 
-BMIS_normalizedData <- newpoodat %>% 
+newpoodat2 <- as.data.table(newpoodat)
+mydata_new2 <- as.data.table(mydata_new)
+rm(list=setdiff(ls(), c("newpoodat2", "mydata_new2")))
+
+setDTthreads()
+
+BMIS_normalizedData <- newpoodat2 %>% 
   select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  left_join(mydata_new) %>%
+  left_join(mydata_new2) %>%
   rename(FinalBMIS = MIS) %>% 
   unique() %>%
   filter(!MassFeature %in% IS.dat$MassFeature)
