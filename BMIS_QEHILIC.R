@@ -105,24 +105,30 @@ IS.means <- IS.dat %>%
   filter(!grepl("_Blk_", Replicate.Name)) %>%
   mutate(MassFeature = as.factor(MassFeature)) %>%
   group_by(MassFeature) %>%
-  summarise(ave = mean(as.numeric(Area)))
+  summarise(ave = mean(as.numeric(Area))) %>%
+  mutate(MassFeature = as.character(MassFeature))
 
 # TODO (rlionheart): Why is the first mass feature all the same number?
 
 # Normalize to each internal Standard----
 binded <- rbind(IS.dat, xcms.long)
+
 Split_Dat <- list()
+
 for (i in 1:length(unique(IS.dat$MassFeature))) {
   Split_Dat[[i]] <- binded %>% 
     mutate(MIS = unique(IS.dat$MassFeature)[i]) %>%
     left_join(IS.dat %>% 
                 rename(MIS = MassFeature, IS_Area = Area) %>% 
-                select(MIS, Replicate.Name, IS_Area)) %>%
+                select(MIS, Replicate.Name, IS_Area), by = c("Replicate.Name", "MIS")) %>%
     left_join(IS.means %>% 
-                rename(MIS = MassFeature)) %>%
+                rename(MIS = MassFeature), by = "MIS") %>%
     mutate(Adjusted_Area = Area/IS_Area*ave)
 }
-area.norm <- do.call(rbind, Split_Dat) %>% select(-IS_Area, -ave)
+
+
+area.norm <- do.call(rbind, Split_Dat) %>% 
+  select(-IS_Area, -ave) 
   
   
 # Break Up the Names (Name structure must be:  Date_type_ID_replicate_anythingextraOK)----
@@ -158,29 +164,27 @@ poodat <- left_join(poodat, poodat %>%
 
 
 
-
-
-
-##Start here
-
-
 # Change the BMIS to "Inj_vol" if the BMIS is not an acceptable -----
 # Adds a column that has the BMIS, not just Poo.picked.IS
 # Changes the finalBMIS to inject_volume if its no good
 
 fixedpoodat <- poodat %>%
-  filter(MIS == "Poo.Picked.IS") %>%
-  mutate(FinalBMIS = as.numeric(ifelse((accept_MIS == "FALSE"), "Inj_vol", Poo.Picked.IS), 
-         FinalRSD = RSD_ofPoo)) 
-newpoodat <- poodat %>% left_join(fixedpoodat %>% select(MassFeature, FinalBMIS)) %>%
+  # filter(MIS == "Poo.Picked.IS") %>%
+  mutate(FinalBMIS = ifelse(accept_MIS == "FALSE", "Inj_vol", Poo.Picked.IS)) %>%
+  mutate(FinalRSD = RSD_ofPoo) 
+
+
+newpoodat <- poodat %>% 
+  left_join(fixedpoodat %>% select(MassFeature, FinalBMIS)) %>%
   filter(MIS == FinalBMIS) %>%
   mutate(FinalRSD = RSD_ofPoo)
-Try <- newpoodat %>% filter(FinalBMIS != "Inj_vol")
-QuickReport <- paste("% of MFs that picked a BMIS", 
+Try <- newpoodat %>% 
+  filter(FinalBMIS != "Inj_vol")
+QuickReport <- print(paste("% of MFs that picked a BMIS", 
                        length(Try$MassFeature) / length(newpoodat$MassFeature), 
                        "RSD improvement cutoff", cut.off,
                        "RSD minimum cutoff", cut.off2,
-                       sep = " ")
+                       sep = " "))
   
 # Evaluate the results of your BMIS cutoff-----
 IS_toISdat <- mydata_new %>%
@@ -200,6 +204,7 @@ ISTest_plot <- ggplot() +
     scale_fill_manual(values=c("white","dark gray")) +
     geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
     facet_wrap(~ MassFeature)
+#print(ISTest_plot)
   
 # Get all the data back - and keep only the MF-MIS match set for the BMIS----
 # Add a column to the longdat that has important information from the FullDat_fixed, 
@@ -207,17 +212,16 @@ ISTest_plot <- ggplot() +
 
 BMIS_normalizedData <- newpoodat %>% 
   select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-    left_join(mydata_new) %>%
-    rename(FinalBMIS = MIS) %>% 
-    unique() %>%
-    filter(!MassFeature %in% IS.dat$MassFeature)
+  left_join(mydata_new) %>%
+  rename(FinalBMIS = MIS) %>% 
+  unique() %>%
+  filter(!MassFeature %in% IS.dat$MassFeature)
   
   
   
-BMISlist <- list(IS_inspectPlot, QuickReport, ISTest_plot, BMIS_normalizedData)
+#BMISlist <- list(IS_inspectPlot, QuickReport, ISTest_plot, BMIS_normalizedData)
 
-#return(invisible(BMISlist))
-  
+
 
   
   
