@@ -1,5 +1,6 @@
 library(data.table)
 library(ggplot2)
+library(parallel)
 library(tidyverse)
 options(scipen=999)
 
@@ -211,16 +212,22 @@ ISTest_plot <- ggplot() +
 # Add a column to the longdat that has important information from the FullDat_fixed, 
 # then only return data that is normalized via B-MIS normalization
 
-newpoodat2 <- as.data.table(newpoodat)
-mydata_new2 <- as.data.table(mydata_new)
-rm(list=setdiff(ls(), c("newpoodat2", "mydata_new2")))
 
-setDTthreads()
 
-BMIS_normalizedData <- newpoodat2 %>% 
+
+
+## Attempted efficient join
+ 
+newpoodat2 <- data.table::data.table(newpoodat, key = c("MassFeature", "MIS"))
+mydata_new2 <- data.table::as.data.table(mydata_new, key = c("MassFeature", "MIS"))
+
+#setDTthreads(threads = 16)
+system.time(join.test <- merge(newpoodat2, mydata_new2, by = "MassFeature", allow.cartesian = TRUE))
+
+#BMIS_normalizedData <- newpoodat2 %>% 
+BMIS_normalizedDAta <- join.test %>%
   select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  left_join(mydata_new2) %>%
-  rename(FinalBMIS = MIS) %>% 
+  #left_join(mydata_new2) %>%
   unique() %>%
   filter(!MassFeature %in% IS.dat$MassFeature)
   
