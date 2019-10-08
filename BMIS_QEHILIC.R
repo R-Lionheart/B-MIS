@@ -1,52 +1,45 @@
 library(ggplot2)
 library(tidyverse)
+options(scipen=999)
 
-# Define all your inputs here
-samp.key.file <- "data/Sample_key.csv"
-is.names.file <- "data/Ingalls_Lab_Standards.csv"
-# KRH Original:
-# is.names.file <- "InternalStandardNames.csv"
-# xcms.dat.pos.file <- "HILICPos_IntegrationsBigPeaksWTargeted2.csv"
-# xcms.dat.neg.file <- "HILICNeg_IntegrationsBigPeaksWTargeted2.csv"
-
-xcms.dat.pos.file <- "data/HILICPos_IntegrationsBigPeaksWTargeted.csv"
-xcms.dat.neg.file <- "data/HILICNeg_IntegrationsBigPeaksWTargeted.csv"
-cut.off <- 0.0
-cut.off2 <- 0.00
 
 # Things to return 
 # IS_inspectPlot (plot to make sure there aren't any internal standards we should kick out)
 # QuickReport (% that picked BMIS, with cut off values)
 # ISTest_plot (plot to evaluate if you cut off is appropriate)
 # BMIS_normalizedData (tibble with the info you actually want!)
-
-
-# BMIS <- function(samp.key.file = "MetaData/Sample_key.csv",
-#                  is.names.file = "MetaData/InternalStandardNames.csv",
-#                  xcms.dat.pos.file = "RawOutput/HILICPos_IntegrationsBigPeaksWTargeted2.csv",
-#                  xcms.dat.neg.file = "RawOutput/HILICNeg_IntegrationsBigPeaksWTargeted.csv",
-#                  cut.off = 0.0,
-#                  cut.off2 = 0.00 ) 
   
 
 # Import data - set filenames within this chunk for xcms output, sample key, and ISdata
-SampKey_all <- read.csv(samp.key.file) 
-IS_names <- read.csv(is.names.file)
-xcms.dat_pos <- read.csv(xcms.dat.pos.file) %>% 
+SampKey_all <- read.csv("data/Sample_key.csv") 
+IS_names <- read.csv("data/Ingalls_Lab_Standards.csv")
+
+xcms.dat_pos <- read.csv("data/HILICPos_IntegrationsBigPeaksWTargeted.csv") %>% 
   mutate(Column = "HILICPos") %>% 
   select(-Protein.Name)
-xcms.dat_neg <- read.csv(xcms.dat.neg.file) %>% 
+xcms.dat_neg <- read.csv("data/HILICNeg_IntegrationsBigPeaksWTargeted.csv") %>% 
   mutate(Column = "HILICNeg") %>%
   select(-Protein.Name)
 
+# Bind pos + neg data and change Area class.
 xcms.dat <- rbind(xcms.dat_pos, xcms.dat_neg) %>%
-    filter(!str_detect(Replicate.Name, "Blk")) %>%
-    filter(!str_detect(Replicate.Name, "Std")) %>%
-    mutate(Area = as.numeric(Area))
+  filter(!str_detect(Replicate.Name, "Blk")) %>%
+  filter(!str_detect(Replicate.Name, "Std")) %>%
+  mutate(Replicate.Name = as.character(Replicate.Name)) %>%
+  mutate(Precursor.Ion.Name = as.character(Precursor.Ion.Name)) %>%
+  mutate(Retention.Time = as.numeric(Retention.Time)) %>%
+  mutate(Area = as.numeric(Area)) %>%
+  mutate(Background = as.numeric(Background)) %>%
+  mutate(Height = as.numeric(Height)) %>%
+  mutate(Mass.Error.PPM = as.numeric(Mass.Error.PPM))
+
+cut.off <- 0.0
+cut.off2 <- 0.00
 
 ## Split frame by matching with internal standards sheet
 ISdatfull <- xcms.dat %>%
-  filter(Precursor.Ion.Name %in% IS_names$Compound.Name)
+  filter(Precursor.Ion.Name %in% IS_names$Compound.Name) # Matches up with IS names
+
 xcms.dat <- xcms.dat %>%
   filter(!Precursor.Ion.Name %in% IS_names$Compound.Name)
 
@@ -66,7 +59,8 @@ SampKey <- SampKey_all %>%
          Replicate.Name = Sample.Name) %>%
   select(Replicate.Name, Area, MassFeature)
 
-IS.dat <- rbind(IS.dat, SampKey) %>% mutate(Column = "HILICPos")
+IS.dat <- rbind(IS.dat, SampKey) %>% 
+  mutate(Column = "HILICPos")
 
 
 # Look at extraction replication of the Internal Standards----
@@ -78,15 +72,19 @@ IS_inspectPlot <- ggplot(IS.dat, aes(x = Replicate.Name, y = Area)) +
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
+#print(IS_inspectPlot)
 
-#Edit data so names match
-IS.dat <- IS.dat %>% mutate(Replicate.Name = Replicate.Name %>%
-                              str_replace("-","."))  %>%
+
+# Edit data so names match
+IS.dat <- IS.dat %>% 
+  mutate(Replicate.Name = Replicate.Name %>%
+                              str_replace("-",".")) %>%
   select(Area, Replicate.Name, MassFeature, Column)
+
 xcms.long <- xcms.dat %>%
-  rename(Replicate.Name = Replicate.Name,
-         MassFeature = Precursor.Ion.Name) %>%
+  rename(MassFeature = Precursor.Ion.Name) %>%
   select(Replicate.Name, MassFeature,  Column, Area)
+
 xcms.long <- xcms.long %>%
   mutate(Replicate.Name = Replicate.Name %>%
            str_replace("170410_Poo_April11AqExtractsFull_",
@@ -102,20 +100,21 @@ IS.dat <- IS.dat %>%
            str_replace("170410_Poo_April11AqExtractsHalf_",
                        "170410_Poo_April11AqExtracts_Half")) 
 
-#Calculate mean values for each IS----
+# Calculate mean values for each IS----
 IS.means <- IS.dat %>% 
   filter(!grepl("_Blk_", Replicate.Name)) %>%
-  mutate(MassFeature = as.factor(MassFeature))%>%
+  mutate(MassFeature = as.factor(MassFeature)) %>%
   group_by(MassFeature) %>%
   summarise(ave = mean(as.numeric(Area)))
 
+# TODO (rlionheart): Why is the first mass feature all the same number?
 
-
-#Normalize to each internal Standard----
+# Normalize to each internal Standard----
 binded <- rbind(IS.dat, xcms.long)
 Split_Dat <- list()
-for (i in 1:length(unique(IS.dat$MassFeature))){
-  Split_Dat[[i]] <- binded %>% mutate(MIS = unique(IS.dat$MassFeature)[i]) %>%
+for (i in 1:length(unique(IS.dat$MassFeature))) {
+  Split_Dat[[i]] <- binded %>% 
+    mutate(MIS = unique(IS.dat$MassFeature)[i]) %>%
     left_join(IS.dat %>% 
                 rename(MIS = MassFeature, IS_Area = Area) %>% 
                 select(MIS, Replicate.Name, IS_Area)) %>%
@@ -126,18 +125,17 @@ for (i in 1:length(unique(IS.dat$MassFeature))){
 area.norm <- do.call(rbind, Split_Dat) %>% select(-IS_Area, -ave)
   
   
-#Break Up the Names (Name structure must be:  Date_type_ID_replicate_anythingextraOK)----
-mydata_new <- area.norm %>% separate(Replicate.Name, 
-                                     c("runDate",
-                                       "type","SampID","replicate"),"_") %>%
-  mutate(Run.Cmpd = paste(area.norm$Replicate.Name,area.norm$MassFeature))
+# Break Up the Names (Name structure must be:  Date_type_ID_replicate_anythingextraOK)----
+mydata_new <- area.norm %>% 
+  separate(Replicate.Name, c("runDate", "type", "SampID","replicate"), "_") %>%
+  mutate(Run.Cmpd = paste(area.norm$Replicate.Name, area.norm$MassFeature))
   
   
-#Find the B-MIS for each MassFeature----
-#Look only the Pooled samples, to get a lowest RSD of the pooled possible (RSD_ofPoo), 
-#then choose which IS reduces the RSD the most (Poo.Picked.IS) 
+# Find the B-MIS for each MassFeature----
+# Look only the Pooled samples, to get a lowest RSD of the pooled possible (RSD_ofPoo), 
+# then choose which IS reduces the RSD the most (Poo.Picked.IS) 
 poodat <- mydata_new %>%
-  filter(type == "Poo")%>%
+  filter(type == "Poo") %>%
   group_by(SampID, MassFeature, MIS) %>%
   summarise(RSD_ofPoo_IND = sd(Adjusted_Area, 
                                na.rm = TRUE)/mean(Adjusted_Area, na.rm = TRUE)) %>%
@@ -145,12 +143,11 @@ poodat <- mydata_new %>%
   group_by(MassFeature, MIS) %>%
   summarise(RSD_ofPoo =  mean(RSD_ofPoo_IND, na.rm = TRUE))
 
-poodat <- poodat %>% left_join(poodat %>%
-                                 group_by(MassFeature) %>%
-                                 summarise(Poo.Picked.IS = 
-                                             unique(MIS)[which.min(RSD_ofPoo)][1]))
+poodat <- poodat %>% 
+  left_join(poodat %>% group_by(MassFeature) %>%
+                       summarise(Poo.Picked.IS = unique(MIS)[which.min(RSD_ofPoo)] [1]))
 
-#Get the starting point of the RSD (Orig_RSD), calculate the change in the RSD, say if the MIS is acceptable----
+# Get the starting point of the RSD (Orig_RSD), calculate the change in the RSD, say if the MIS is acceptable----
 poodat <- left_join(poodat, poodat %>%
                       filter(MIS == "Inj_vol" ) %>%
                       mutate(Orig_RSD = RSD_ofPoo) %>%
@@ -158,13 +155,21 @@ poodat <- left_join(poodat, poodat %>%
   mutate(del_RSD = (Orig_RSD - RSD_ofPoo)) %>%
   mutate(percentChange = del_RSD/Orig_RSD) %>%
   mutate(accept_MIS = (percentChange > cut.off & Orig_RSD > cut.off2)) 
-  
-#Change the BMIS to "Inj_vol" if the BMIS is not an acceptable -----
-#Adds a column that has the BMIS, not just Poo.picked.IS
-#Changes the finalBMIS to inject_volume if its no good
+
+
+
+
+
+
+##Start here
+
+
+# Change the BMIS to "Inj_vol" if the BMIS is not an acceptable -----
+# Adds a column that has the BMIS, not just Poo.picked.IS
+# Changes the finalBMIS to inject_volume if its no good
 
 fixedpoodat <- poodat %>%
-  filter(MIS == Poo.Picked.IS) %>%
+  filter(MIS == "Poo.Picked.IS") %>%
   mutate(FinalBMIS = as.numeric(ifelse((accept_MIS == "FALSE"), "Inj_vol", Poo.Picked.IS), 
          FinalRSD = RSD_ofPoo)) 
 newpoodat <- poodat %>% left_join(fixedpoodat %>% select(MassFeature, FinalBMIS)) %>%
