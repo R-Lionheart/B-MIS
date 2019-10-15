@@ -15,7 +15,7 @@ options(scipen=999)
 
 # Imports -----------------------------------------------------------------
 
-# SampKey_all <- read.csv("data/Sample_key.csv") 
+Wei.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv")
 
 # Positive data only. Formerly known as xcms.dat_pos
@@ -50,7 +50,21 @@ Wei.transect.NoIS <- Wei.transect.pos %>%
 Wei.IS.data <- Wei.transect.withIS %>%
   select(ReplicateName, Metabolite.name, AreaValue) %>%
   mutate(MassFeature = Metabolite.name) %>%
-  select(-Metabolite.name)
+  select(-Metabolite.name) 
+
+Wei.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.IS.data$ReplicateName)
+  
+
+Wei.SampKey <- Wei.SampKey_all %>%
+  filter(Sample.Name %in% Wei.IS.data$ReplicateName) %>%
+  select(Sample.Name, Bio.Normalization) %>%
+  filter(!is.na(Bio.Normalization)) %>%
+  mutate(MassFeature = "Inj_vol",
+         AreaValue = Bio.Normalization,
+         ReplicateName = Sample.Name) %>%
+  select(ReplicateName, AreaValue, MassFeature)
+
+Wei.IS.data <- rbind(Wei.IS.data, Wei.SampKey) 
 
 # Extraction replication of Internal Standards -----------------------------------------------------------------
 IS_inspectPlot <- ggplot(Wei.IS.data, aes(x = ReplicateName, y = AreaValue)) + 
@@ -69,7 +83,7 @@ Wei.IS.data <- Wei.IS.data %>%
   mutate(ReplicateName = ReplicateName %>%
            str_replace("-",".")) 
 
-Wei.transect.long  <- Wei.transect.pos %>%
+Wei.transect.long  <- Wei.transect.NoIS %>%
   rename(MassFeature = Metabolite.name) %>%
   select(ReplicateName, MassFeature, AreaValue)
 
@@ -104,6 +118,7 @@ for (i in 1:length(unique(Wei.IS.data$MassFeature))) {
 Wei.area.norm <- do.call(rbind, Split_Dat) %>% 
   select(-IS_Area, -Average.Area) 
 
+
 # Standardize name structure to: Date_type_ID_replicate_anythingextraOK) ----------------------------------------------------------------
 Wei.mydata_new <- Wei.area.norm %>% 
   separate(ReplicateName, c("runDate", "type", "SampID","replicate"), "_") %>%
@@ -129,7 +144,7 @@ Wei.poodat <- Wei.poodat %>%
 
 # Get the original RSD, calculate RSD change, decide if MIS is acceptable----------------------------------------------------------------
 Wei.poodat <- left_join(Wei.poodat, Wei.poodat %>%
-                      #filter(MIS == "Inj_vol" ) %>%
+                      filter(MIS == "Inj_vol" ) %>%
                       mutate(Orig_RSD = RSD_ofPoo) %>%
                       select(-RSD_ofPoo, -MIS)) %>%
   mutate(del_RSD = (Orig_RSD - RSD_ofPoo)) %>%
@@ -143,6 +158,8 @@ Wei.poodat <- left_join(Wei.poodat, Wei.poodat %>%
 # Changes the FinalBMIS to inject_volume if its no good
 
 Wei.fixedpoodat <- Wei.poodat %>%
+  #filter(MIS == "Poo.Picked.IS") %>% # original from krh
+  #filter(MIS == Poo.Picked.IS) %>%
   mutate(FinalBMIS = ifelse(accept_MIS == "FALSE", "Inj_vol", Poo.Picked.IS)) %>%
   mutate(FinalRSD = RSD_ofPoo) 
 
@@ -159,6 +176,7 @@ QuickReport <- print(paste("% of MFs that picked a BMIS",
                            "RSD improvement cutoff", cut.off,
                            "RSD minimum cutoff", cut.off2,
                            sep = " "))
+
 
 # Evaluate the results of your BMIS cutoff----------------------------------------------------------------
 IS_toISdat <- Wei.mydata_new %>%
@@ -185,37 +203,37 @@ ISTest_plot <- ggplot() +
 
 
 ## original
-# BMIS_normalizedData <- newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-#   left_join(mydata_new %>% rename(FinalBMIS = MIS)) %>% 
-#   unique() %>%
-#   filter(!MassFeature %in% IS.dat$MassFeature)
+BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+  left_join(Wei.mydata_new %>% rename(FinalBMIS = MIS)) %>%
+  unique() 
+  #filter(!MassFeature %in% Wei.IS.data$MassFeature)
 ##
 
 
-## Attempted efficient join
-
-Wei.newpoodat2 <- data.table::data.table(Wei.newpoodat) %>%
-  select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  unique()
-Wei.mydata_new2 <- data.table::as.data.table(Wei.mydata_new) %>%
-  rename(FinalBMIS = MIS)
-
-
-setkey(Wei.newpoodat2, MassFeature)
-setkey(Wei.mydata_new2, MassFeature)
-
-
-setDTthreads(threads = 16)
-system.time(join.test <- merge(Wei.newpoodat2, Wei.mydata_new2, by = .EACHI, allow.cartesian = FALSE))
-
-Wei.BMIS_normalizedData <- join.test %>%
-  select(MassFeature, Orig_RSD, del_RSD, percentChange, FinalBMIS, FinalRSD, Run.Cmpd, Adjusted_Area, type, runDate, SampID, replicate, AreaValue) %>%
-  #select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  #left_join(mydata_new2) %>%
-  unique() 
-
-# INCLUDE THIS?
-#filter(!MassFeature %in% IS.dat$MassFeature)
+# ## Attempted efficient join
+# 
+# Wei.newpoodat2 <- data.table::data.table(Wei.newpoodat) %>%
+#   select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+#   unique()
+# Wei.mydata_new2 <- data.table::as.data.table(Wei.mydata_new) %>%
+#   rename(FinalBMIS = MIS)
+# 
+# 
+# setkey(Wei.newpoodat2, MassFeature)
+# setkey(Wei.mydata_new2, MassFeature)
+# 
+# 
+# setDTthreads(threads = 16)
+# system.time(join.test <- merge(Wei.newpoodat2, Wei.mydata_new2, by = .EACHI, allow.cartesian = FALSE))
+# 
+# Wei.BMIS_normalizedData <- join.test %>%
+#   select(MassFeature, Orig_RSD, del_RSD, percentChange, FinalBMIS, FinalRSD, Run.Cmpd, Adjusted_Area, type, runDate, SampID, replicate, AreaValue) %>%
+#   #select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+#   #left_join(mydata_new2) %>%
+#   unique() 
+# 
+# # INCLUDE THIS?
+# #filter(!MassFeature %in% IS.dat$MassFeature)
 
 
 

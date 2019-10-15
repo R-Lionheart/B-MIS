@@ -74,7 +74,7 @@ IS_inspectPlot <- ggplot(IS.dat, aes(x = Replicate.Name, y = Area)) +
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-#print(IS_inspectPlot)
+print(IS_inspectPlot)
 
 
 ## Edit data so names match
@@ -208,7 +208,7 @@ ISTest_plot <- ggplot() +
     scale_fill_manual(values=c("white","dark gray")) +
     geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
     facet_wrap(~ MassFeature)
-#print(ISTest_plot)
+print(ISTest_plot)
   
 ## Get all the data back - and keep only the MF-MIS match set for the BMIS----
 # Add a column to the longdat that has important information from the FullDat_fixed, 
@@ -216,23 +216,11 @@ ISTest_plot <- ggplot() +
 
 
 
-## Attempted efficient join
- 
-newpoodat2 <- data.table::data.table(newpoodat, key = c("MassFeature", "MIS"))
-mydata_new2 <- data.table::as.data.table(mydata_new, key = c("MassFeature", "MIS"))
 
-setDTthreads(threads = 16)
-system.time(join.test <- merge(newpoodat2, mydata_new2, by = "MassFeature", allow.cartesian = TRUE))
-
-#BMIS_normalizedData <- newpoodat2 %>% 
-BMIS_normalizedData <- join.test %>%
-  select(MassFeature, Orig_RSD, del_RSD, percentChange, FinalBMIS, FinalRSD, Run.Cmpd, Adjusted_Area, type, runDate, SampID, replicate, Area) %>%
-  #select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  #left_join(mydata_new2) %>%
-  unique() 
-  
-  # INCLUDE THIS?
-  #filter(!MassFeature %in% IS.dat$MassFeature)
+BMIS_normalizedData <- newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+  left_join(mydata_new %>% rename(FinalBMIS = MIS)) %>%
+  unique() %>%
+  filter(!MassFeature %in% IS.dat$MassFeature)
   
   
   
