@@ -203,37 +203,14 @@ ISTest_plot <- ggplot() +
 
 
 ## original
-BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.mydata_new %>% rename(FinalBMIS = MIS)) %>%
   unique() 
   #filter(!MassFeature %in% Wei.IS.data$MassFeature)
 ##
 
 
-# ## Attempted efficient join
-# 
-# Wei.newpoodat2 <- data.table::data.table(Wei.newpoodat) %>%
-#   select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-#   unique()
-# Wei.mydata_new2 <- data.table::as.data.table(Wei.mydata_new) %>%
-#   rename(FinalBMIS = MIS)
-# 
-# 
-# setkey(Wei.newpoodat2, MassFeature)
-# setkey(Wei.mydata_new2, MassFeature)
-# 
-# 
-# setDTthreads(threads = 16)
-# system.time(join.test <- merge(Wei.newpoodat2, Wei.mydata_new2, by = .EACHI, allow.cartesian = FALSE))
-# 
-# Wei.BMIS_normalizedData <- join.test %>%
-#   select(MassFeature, Orig_RSD, del_RSD, percentChange, FinalBMIS, FinalRSD, Run.Cmpd, Adjusted_Area, type, runDate, SampID, replicate, AreaValue) %>%
-#   #select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-#   #left_join(mydata_new2) %>%
-#   unique() 
-# 
-# # INCLUDE THIS?
-# #filter(!MassFeature %in% IS.dat$MassFeature)
+write.csv(BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd.csv")
 
 
 
