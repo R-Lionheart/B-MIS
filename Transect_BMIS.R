@@ -122,7 +122,7 @@ Wei.area.norm <- do.call(rbind, Split_Dat) %>%
 # Standardize name structure to: Date_type_ID_replicate_anythingextraOK) ----------------------------------------------------------------
 Wei.mydata_new <- Wei.area.norm %>% 
   separate(ReplicateName, c("runDate", "type", "SampID","replicate"), "_") %>%
-  mutate(Run.Cmpd = paste(Wei.area.norm$Replicate.Name, Wei.area.norm$MassFeature))
+  mutate(Run.Cmpd = paste(Wei.area.norm$ReplicateName, Wei.area.norm$MassFeature))
 
 
 # Find the B-MIS for each MassFeature----------------------------------------------------------------
@@ -210,7 +210,7 @@ Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig
 ##
 
 
-write.csv(BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd.csv")
+write.csv(Wei.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd.csv")
 
 
 
