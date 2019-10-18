@@ -1,6 +1,7 @@
 library(data.table)
 library(ggplot2)
 library(parallel)
+library(stringr)
 library(tidyverse)
 options(scipen=999)
 
@@ -32,9 +33,11 @@ Wei.transect.pos <- Wei.transect.pos %>%
   mutate(Metabolite.name = as.character(Metabolite.name)) %>%
   mutate(RTValue = as.numeric(RTValue)) %>%
   mutate(AreaValue = as.numeric(AreaValue)) %>%
-  mutate(SNValue = as.numeric(SNValue)) 
+  mutate(SNValue = as.numeric(SNValue)) %>% # ORIGINAL STOPS HERE- BELOW IS REMOVING THE INGALLS_ PREFIX FROM METABOLITE NAME
+  mutate(Metabolite.name = ifelse(str_detect(Metabolite.name, "Ingalls_"), sapply(strsplit(Metabolite.name, "_"), `[`, 2), Metabolite.name))
 
-cut.off <- 0.0
+
+cut.off <- 0.4
 cut.off2 <- 0.00
 
 # Match transect data with Internal Standards list -----------------------------------------------------------------

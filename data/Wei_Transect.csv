@@ -1,10 +1,10 @@
 "Description","Value","ReplicateName","Ordered.ID","Area.with.QC","AreaValue","MZValue","RTValue","SNValue","Alignment.ID","Metabolite.name","Run.Type","SN.Flag","area.min.Flag","RT.Flag","blank.Flag","all.Flags"
-"Hello! Welcome to the world of QE Quality Control! ",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"Hello! Welcome to the world of MSDIAL QE Quality Control! ",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 "Minimum area for a real peak: ",1000,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 "RT flexibility: ",0.4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 "Blank can be this fraction of a sample: ",0.3,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 "S/N ratio: ",4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-"Processed on: ",1570836069.95498,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"Processed on: ",1571360291.02288,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 NA,NA,"X180821_Blk_SWBlk_1",38,NA,789292,146.118,10.108,3.335617,"1023","(3-Carboxypropyl)trimethylammonium (TMAB)","blk","SN.Flag",NA,NA,NA,"SN.Flag, "
 NA,NA,"X180821_Blk_SWBlk_2",38,NA,716757,146.118,10.097,3.75774,"1023","(3-Carboxypropyl)trimethylammonium (TMAB)","blk","SN.Flag",NA,NA,NA,"SN.Flag, "
 NA,NA,"X180821_Blk_SWBlk_3",38,NA,577564,146.118,10.059,3.00614,"1023","(3-Carboxypropyl)trimethylammonium (TMAB)","blk","SN.Flag",NA,NA,NA,"SN.Flag, "
