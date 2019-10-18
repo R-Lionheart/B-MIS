@@ -20,7 +20,7 @@ Wei.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv")
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv")
 
 # Positive data only. Formerly known as xcms.dat_pos
-Wei.transect.pos <- read.csv("data/Wei_Transect.csv", header = TRUE) %>% 
+Wei.transect.pos <- read.csv("data/Wei_Transect_QC.csv", header = TRUE) %>% 
   slice(-1:-6) %>%
   select(-c(Description, Value)) 
 
