@@ -37,8 +37,8 @@ Wei.transect.pos <- Wei.transect.pos %>%
   mutate(Metabolite.name = ifelse(str_detect(Metabolite.name, "Ingalls_"), sapply(strsplit(Metabolite.name, "_"), `[`, 2), Metabolite.name))
 
 
-cut.off <- 0.4
-cut.off2 <- 0.00
+cut.off <- 0.4 # 40% decrease in RSD of pooled injections, aka improvement cutoff
+cut.off2 <- 0.1 # RSD minimum
 
 # Match transect data with Internal Standards list -----------------------------------------------------------------
 Wei.transect.withIS <- Wei.transect.pos %>%
