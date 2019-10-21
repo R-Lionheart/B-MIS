@@ -17,7 +17,9 @@ options(scipen=999)
 # Imports -----------------------------------------------------------------
 
 Wei.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
-Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv")
+Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
+  filter(Column == "HILIC") %>%
+  filter(z == 1)
 
 # Positive data only. Formerly known as xcms.dat_pos
 Wei.transect.pos <- read.csv("data/Wei_Transect_QC.csv", header = TRUE) %>% 
@@ -51,7 +53,8 @@ Wei.transect.NoIS <- Wei.transect.pos %>%
 # Read in Internal Standard data -----------------------------------------------------------------
 # If injection volume is known, add in here.
 Wei.IS.data <- Wei.transect.withIS %>%
-  select(ReplicateName, Metabolite.name, AreaValue) %>%
+  # select(ReplicateName, Metabolite.name, AreaValue) %>% # Original, non-QC'd AreaValue 
+  select(ReplicateName, Metabolite.name, Area.with.QC) %>%
   mutate(MassFeature = Metabolite.name) %>%
   select(-Metabolite.name) 
 
@@ -59,13 +62,13 @@ Wei.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.IS.data$ReplicateName)
   
 
 Wei.SampKey <- Wei.SampKey_all %>%
-  filter(Sample.Name %in% Wei.IS.data$ReplicateName) %>%
+  filter(Sample.Name %in% Wei.IS.data$ReplicateName) %>% # Drops standards from SampKey_all
   select(Sample.Name, Bio.Normalization) %>%
-  filter(!is.na(Bio.Normalization)) %>%
+  # filter(!is.na(Bio.Normalization)) %>% # Unnecessary for transect dataset
   mutate(MassFeature = "Inj_vol",
-         AreaValue = Bio.Normalization,
+         Area.with.QC = Bio.Normalization,
          ReplicateName = Sample.Name) %>%
-  select(ReplicateName, AreaValue, MassFeature)
+  select(ReplicateName, Area.with.QC, MassFeature)
 
 Wei.IS.data <- rbind(Wei.IS.data, Wei.SampKey) 
 
@@ -88,7 +91,9 @@ Wei.IS.data <- Wei.IS.data %>%
 
 Wei.transect.long  <- Wei.transect.NoIS %>%
   rename(MassFeature = Metabolite.name) %>%
-  select(ReplicateName, MassFeature, AreaValue)
+  select(ReplicateName, MassFeature, Area.with.QC)
+
+Wei.transect.long$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.long$ReplicateName)
 
 
 # Caluclate mean values for each IS----------------------------------------------------------------
@@ -96,7 +101,7 @@ Wei.IS.means <- Wei.IS.data %>%
   filter(!grepl("_Blk_", ReplicateName)) %>%
   mutate(MassFeature = as.factor(MassFeature)) %>%
   group_by(MassFeature) %>%
-  summarise(Average.Area = mean(as.numeric(AreaValue))) %>%
+  summarise(Average.Area = mean(as.numeric(Area.with.QC), na.rm = TRUE)) %>%
   mutate(MassFeature = as.character(MassFeature))
 
 
