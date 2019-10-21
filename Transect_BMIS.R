@@ -16,7 +16,7 @@ options(scipen=999)
 
 # Imports -----------------------------------------------------------------
 
-Wei.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
+Wei.transect.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
   filter(Column == "HILIC") %>%
   filter(z == 1)
@@ -52,17 +52,17 @@ Wei.transect.NoIS <- Wei.transect.pos %>%
 
 # Read in Internal Standard data -----------------------------------------------------------------
 # If injection volume is known, add in here.
-Wei.IS.data <- Wei.transect.withIS %>%
+Wei.transect.IS.data <- Wei.transect.withIS %>%
   # select(ReplicateName, Metabolite.name, AreaValue) %>% # Original, non-QC'd AreaValue 
   select(ReplicateName, Metabolite.name, Area.with.QC) %>%
   mutate(MassFeature = Metabolite.name) %>%
   select(-Metabolite.name) 
 
-Wei.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.IS.data$ReplicateName)
+Wei.transect.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.IS.data$ReplicateName)
   
 
-Wei.SampKey <- Wei.SampKey_all %>%
-  filter(Sample.Name %in% Wei.IS.data$ReplicateName) %>% # Drops standards from SampKey_all
+Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
+  filter(Sample.Name %in% Wei.transect.IS.data$ReplicateName) %>% # Drops standards from SampKey_all
   select(Sample.Name, Bio.Normalization) %>%
   # filter(!is.na(Bio.Normalization)) %>% # Unnecessary for transect dataset
   mutate(MassFeature = "Inj_vol",
@@ -70,10 +70,10 @@ Wei.SampKey <- Wei.SampKey_all %>%
          ReplicateName = Sample.Name) %>%
   select(ReplicateName, Area.with.QC, MassFeature)
 
-Wei.IS.data <- rbind(Wei.IS.data, Wei.SampKey) 
+Wei.transect.IS.data <- rbind(Wei.transect.IS.data, Wei.transect.SampKey) 
 
 # Extraction replication of Internal Standards -----------------------------------------------------------------
-IS_inspectPlot <- ggplot(Wei.IS.data, aes(x = ReplicateName, y = AreaValue)) + 
+IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = AreaValue)) + 
   geom_bar(stat = "identity") + 
   facet_wrap( ~MassFeature, scales = "free_y") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5, size = 5), 
@@ -85,7 +85,7 @@ IS_inspectPlot <- ggplot(Wei.IS.data, aes(x = ReplicateName, y = AreaValue)) +
 
 
 # Edit data so names match-----------------------------------------------------------------
-Wei.IS.data <- Wei.IS.data %>% 
+Wei.transect.IS.data <- Wei.transect.IS.data %>% 
   mutate(ReplicateName = ReplicateName %>%
            str_replace("-",".")) 
 
@@ -97,7 +97,7 @@ Wei.transect.long$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.long$Replica
 
 
 # Caluclate mean values for each IS----------------------------------------------------------------
-Wei.IS.means <- Wei.IS.data %>% 
+Wei.transect.IS.means <- Wei.transect.IS.data %>% 
   filter(!grepl("_Blk_", ReplicateName)) %>%
   mutate(MassFeature = as.factor(MassFeature)) %>%
   group_by(MassFeature) %>%
@@ -106,18 +106,18 @@ Wei.IS.means <- Wei.IS.data %>%
 
 
 # Normalize to each internal Standard----------------------------------------------------------------
-Wei.binded <- rbind(Wei.IS.data, Wei.transect.long) %>%
+Wei.binded <- rbind(Wei.transect.IS.data, Wei.transect.long) %>%
   arrange(MassFeature)
 
 Split_Dat <- list()
 
-for (i in 1:length(unique(Wei.IS.data$MassFeature))) {
+for (i in 1:length(unique(Wei.transect.IS.data$MassFeature))) {
   Split_Dat[[i]] <- Wei.binded %>% 
-    mutate(MIS = unique(Wei.IS.data$MassFeature)[i]) %>%
-    left_join(Wei.IS.data %>% 
+    mutate(MIS = unique(Wei.transect.IS.data$MassFeature)[i]) %>%
+    left_join(Wei.transect.IS.data %>% 
                 rename(MIS = MassFeature, IS_Area = AreaValue) %>% 
                 select(MIS, ReplicateName, IS_Area), by = c("ReplicateName", "MIS")) %>%
-    left_join(Wei.IS.means %>% 
+    left_join(Wei.transect.IS.means %>% 
                 rename(MIS = MassFeature), by = "MIS") %>%
     mutate(Adjusted_Area = AreaValue/IS_Area*Average.Area)
 }
@@ -188,7 +188,7 @@ QuickReport <- print(paste("% of MFs that picked a BMIS",
 
 # Evaluate the results of your BMIS cutoff----------------------------------------------------------------
 IS_toISdat <- Wei.mydata_new %>%
-  filter(MassFeature %in% Wei.IS.data$MassFeature) %>%
+  filter(MassFeature %in% Wei.transect.IS.data$MassFeature) %>%
   select(MassFeature, MIS, Adjusted_Area, type) %>%
   filter(type == "Smp") %>%
   group_by(MassFeature, MIS) %>%
@@ -214,7 +214,7 @@ ISTest_plot <- ggplot() +
 Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.mydata_new %>% rename(FinalBMIS = MIS)) %>%
   unique() 
-  #filter(!MassFeature %in% Wei.IS.data$MassFeature)
+  #filter(!MassFeature %in% Wei.transect.IS.data$MassFeature)
 ##
 
 
