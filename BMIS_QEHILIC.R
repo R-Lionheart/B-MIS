@@ -74,7 +74,7 @@ IS_inspectPlot <- ggplot(IS.dat, aes(x = Replicate.Name, y = Area)) +
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-print(IS_inspectPlot)
+#print(IS_inspectPlot)
 
 
 ## Edit data so names match
@@ -181,6 +181,7 @@ newpoodat <- poodat %>%
   left_join(fixedpoodat %>% select(MassFeature, FinalBMIS)) %>%
   filter(MIS == FinalBMIS) %>%
   mutate(FinalRSD = RSD_ofPoo)
+
 Try <- newpoodat %>% 
   filter(FinalBMIS != "Inj_vol")
 QuickReport <- print(paste("% of MFs that picked a BMIS", 
@@ -208,7 +209,7 @@ ISTest_plot <- ggplot() +
     scale_fill_manual(values=c("white","dark gray")) +
     geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
     facet_wrap(~ MassFeature)
-print(ISTest_plot)
+#print(ISTest_plot)
   
 ## Get all the data back - and keep only the MF-MIS match set for the BMIS----
 # Add a column to the longdat that has important information from the FullDat_fixed, 
