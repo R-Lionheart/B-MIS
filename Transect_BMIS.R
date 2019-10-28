@@ -216,7 +216,7 @@ ISTest_plot <- ggplot() +
   scale_fill_manual(values=c("white","dark gray")) +
   geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
   facet_wrap(~ MassFeature)
-print(ISTest_plot)
+#print(ISTest_plot)
 
 
 # Return data that is normalized via BMIS----------------------------------------------------------------
@@ -224,7 +224,7 @@ print(ISTest_plot)
 
 ## original
 Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  left_join(Wei.transect.mydata_new %>% rename(FinalBMIS = MIS)) %>%
+  left_join(Wei.transect.mydata_new %>% rename(FinalBMIS = MIS), by = "MassFeature") %>%
   unique() #%>%
   #filter(!MassFeature == FinalBMIS) # This is an RML addition.
 
