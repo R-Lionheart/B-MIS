@@ -22,8 +22,10 @@ options(scipen=999)
 Wei.transect.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
   filter(Column == "HILIC") %>%
-  #filter(z == 1) %>%
-  filter(Compound.Type == "Internal Standard")
+  filter(Compound.Type == "Internal Standard") 
+
+trimws(Wei.Internal.Standards$Compound.Name, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
+
 
 # Positive data only. 
 Wei.transect.pos <- read.csv("data/Wei_Transect_QC.csv", header = TRUE) %>% 
@@ -62,7 +64,6 @@ Wei.transect.IS.data <- Wei.transect.withIS %>%
   select(-Metabolite.name) 
 
 Wei.transect.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.IS.data$ReplicateName)
-  
 
 Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
   filter(Sample.Name %in% Wei.transect.IS.data$ReplicateName) %>% # Drops standards from SampKey_all
@@ -173,7 +174,6 @@ Wei.transect.poodat <- left_join(Wei.transect.poodat, Wei.transect.poodat %>%
 # Changes the FinalBMIS to inject_volume if its no good
 
 Wei.transect.fixedpoodat <- Wei.transect.poodat %>%
-  #filter(MIS == "Poo.Picked.IS") %>% # original from krh
   filter(MIS == Poo.Picked.IS) %>% # If not commented out, this line filters out all but three compounds.
   mutate(FinalBMIS = ifelse(accept_MIS == "FALSE", "Inj_vol", Poo.Picked.IS)) %>%
   mutate(FinalRSD = RSD_ofPoo) 
