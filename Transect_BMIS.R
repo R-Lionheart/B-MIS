@@ -22,7 +22,7 @@ options(scipen=999)
 Wei.transect.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
   filter(Column == "HILIC") %>%
-  filter(z == 1) %>%
+  #filter(z == 1) %>%
   filter(Compound.Type == "Internal Standard")
 
 # Positive data only. 
@@ -57,7 +57,6 @@ Wei.transect.NoIS <- Wei.transect.pos %>%
 # Read in Internal Standard data -----------------------------------------------------------------
 # If injection volume is known, add in here.
 Wei.transect.IS.data <- Wei.transect.withIS %>%
-  # select(ReplicateName, Metabolite.name, AreaValue) %>% # Original, non-QC'd AreaValue 
   select(ReplicateName, Metabolite.name, Area.with.QC) %>%
   mutate(MassFeature = Metabolite.name) %>%
   select(-Metabolite.name) 
@@ -68,7 +67,6 @@ Wei.transect.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.IS.data$R
 Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
   filter(Sample.Name %in% Wei.transect.IS.data$ReplicateName) %>% # Drops standards from SampKey_all
   select(Sample.Name, Bio.Normalization) %>%
-  # filter(!is.na(Bio.Normalization)) %>% # Unnecessary for transect dataset
   mutate(MassFeature = "Inj_vol",
          Area.with.QC = Bio.Normalization,
          ReplicateName = Sample.Name) %>%
