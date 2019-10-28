@@ -84,19 +84,24 @@ IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.w
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-print(IS_inspectPlot)
+#print(IS_inspectPlot)
 
 
 # Edit data so names match-----------------------------------------------------------------
 Wei.transect.IS.data <- Wei.transect.IS.data %>% 
   mutate(ReplicateName = ReplicateName %>%
-           str_replace("-",".")) 
+           str_replace("-",".")) %>%
+  arrange(ReplicateName)
 
 Wei.transect.long  <- Wei.transect.NoIS %>%
   rename(MassFeature = Metabolite.name) %>%
-  select(ReplicateName, MassFeature, Area.with.QC)
-
+  select(ReplicateName, MassFeature, Area.with.QC) %>%
+  arrange(ReplicateName)
 Wei.transect.long$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.long$ReplicateName)
+
+test_IS.data <- unique(Wei.transect.IS.data$ReplicateName)
+test_long.data <- unique(Wei.transect.long$ReplicateName)
+all.equal(test_IS.data, test_long.data)
 
 
 # Caluclate mean values for each IS----------------------------------------------------------------
