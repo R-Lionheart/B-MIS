@@ -224,15 +224,16 @@ ISTest_plot <- ggplot() +
 
 ## original
 Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
-  left_join(Wei.transect.mydata_new %>% rename(FinalBMIS = MIS), by = "MassFeature") %>%
+  left_join(Wei.transect.mydata_new, by = "MassFeature") %>%
+  filter(MIS == FinalBMIS) %>%
   unique() #%>%
-  #filter(!MassFeature == FinalBMIS) # This is an RML addition.
+ # This is an RML addition.
 
   #filter(MassFeature %in% Wei.transect.IS.data$MassFeature)
 ##
 
 
-write.csv(Wei.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct24.csv")
+write.csv(Wei.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct29.csv")
 
 
 
