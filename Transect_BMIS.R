@@ -4,8 +4,6 @@ library(ggplot2)
 library(parallel)
 library(stringr)
 library(tidyverse)
-
-
 options(scipen=999)
 
 ## This BMIS is for Wei's Eddy Transect data.
@@ -27,7 +25,7 @@ Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
 trimws(Wei.Internal.Standards$Compound.Name, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
 
 
-# Positive data only. 
+# Positive data only. ## ADD NEGATIVE DATA FROM QC HERE
 Wei.transect.pos <- read.csv("data/Wei_Transect_QC.csv", header = TRUE) %>% 
   slice(-1:-6) %>%
   select(-c(Description, Value)) 
@@ -84,7 +82,7 @@ IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.w
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-#print(IS_inspectPlot)
+print(IS_inspectPlot)
 
 
 # Edit data so names match-----------------------------------------------------------------
@@ -216,7 +214,7 @@ ISTest_plot <- ggplot() +
   scale_fill_manual(values=c("white","dark gray")) +
   geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
   facet_wrap(~ MassFeature)
-#print(ISTest_plot)
+print(ISTest_plot)
 
 
 # Return data that is normalized via BMIS----------------------------------------------------------------
