@@ -25,7 +25,7 @@ Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
 trimws(Wei.Internal.Standards$Compound.Name, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
 
 
-# Positive data only. ## ADD NEGATIVE DATA FROM QC HERE
+# HILICPos and HILICNeg data
 Wei.transect <- read.csv("data/Wei_Transect_HILICPosNeg_QC.csv", header = TRUE) %>% 
   slice(-1:-6) %>%
   select(-c(Description, Value)) 
@@ -71,6 +71,9 @@ Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
   select(ReplicateName, Area.with.QC, MassFeature)
 
 Wei.transect.IS.data <- rbind(Wei.transect.IS.data, Wei.transect.SampKey) 
+
+IS_Issues <- Wei.transect.IS.data[is.na(Wei.transect.IS.data$Area.with.QC),]
+
 
 # Extraction replication of Internal Standards -----------------------------------------------------------------
 IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.with.QC)) + 
@@ -223,12 +226,7 @@ print(ISTest_plot)
 Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.transect.mydata_new, by = "MassFeature") %>%
   filter(MIS == FinalBMIS) %>%
-  unique() #%>%
- # This is an RML addition.
-
-  #filter(MassFeature %in% Wei.transect.IS.data$MassFeature)
-##
-
+  unique() 
 
 write.csv(Wei.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct29.csv")
 
