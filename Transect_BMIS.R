@@ -26,31 +26,30 @@ trimws(Wei.Internal.Standards$Compound.Name, which = c("both", "left", "right"),
 
 
 # Positive data only. ## ADD NEGATIVE DATA FROM QC HERE
-Wei.transect.pos <- read.csv("data/Wei_Transect_QC.csv", header = TRUE) %>% 
+Wei.transect <- read.csv("data/Wei_Transect_HILICPosNeg_QC.csv", header = TRUE) %>% 
   slice(-1:-6) %>%
   select(-c(Description, Value)) 
 
 
 # Change class + adjust data. Set cutoff values -----------------------------------------------------------------
-Wei.transect.pos <- Wei.transect.pos %>%
+Wei.transect <- Wei.transect %>%
   filter(!str_detect(ReplicateName, "Blk")) %>%
   filter(!str_detect(ReplicateName, "Std")) %>%
   mutate(ReplicateName = as.character(ReplicateName)) %>%
   mutate(Metabolite.name = as.character(Metabolite.name)) %>%
   mutate(RTValue = as.numeric(RTValue)) %>%
   mutate(AreaValue = as.numeric(AreaValue)) %>%
-  mutate(SNValue = as.numeric(SNValue)) %>% # ORIGINAL STOPS HERE- BELOW IS REMOVING THE INGALLS_ PREFIX FROM METABOLITE NAME
+  mutate(SNValue = as.numeric(SNValue)) %>% 
   mutate(Metabolite.name = ifelse(str_detect(Metabolite.name, "Ingalls_"), sapply(strsplit(Metabolite.name, "_"), `[`, 2), Metabolite.name))
-
 
 cut.off <- 0.4 # 40% decrease in RSD of pooled injections, aka improvement cutoff
 cut.off2 <- 0.1 # RSD minimum
 
 # Match transect data with Internal Standards list -----------------------------------------------------------------
-Wei.transect.withIS <- Wei.transect.pos %>%
+Wei.transect.withIS <- Wei.transect %>%
   filter(Metabolite.name %in% Wei.Internal.Standards$Compound.Name) 
 
-Wei.transect.NoIS <- Wei.transect.pos %>%
+Wei.transect.NoIS <- Wei.transect %>%
   filter(!Metabolite.name %in% Wei.Internal.Standards$Compound.Name) 
 
 
