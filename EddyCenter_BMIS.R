@@ -223,7 +223,7 @@ Wei.eddycenter.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, Fina
   filter(MIS == FinalBMIS) %>%
   unique() 
 
-write.csv(Wei.eddycenter.BMIS_normalizedData, file = "~/Downloads/Wei_Eddycenter_BMISd_withQC_fixValine.csv")
+write.csv(Wei.eddycenter.BMIS_normalizedData, file = "~/Downloads/Wei_Eddycenter_HILICPosNeg_BMISd_withQC_fixValine.csv")
 
 
 

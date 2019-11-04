@@ -88,7 +88,7 @@ IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.w
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-#print(IS_inspectPlot)
+print(IS_inspectPlot)
 
 
 # Edit data so names match-----------------------------------------------------------------
@@ -141,8 +141,8 @@ for (i in 1:length(unique(Wei.transect.IS.data$MassFeature))) {
 }
 
 
-Wei.transect.area.norm <- do.call(rbind, Split_Dat) # %>% 
-  #select(-IS_Area, -Average.Area) 
+Wei.transect.area.norm <- do.call(rbind, Split_Dat) %>% 
+  select(-IS_Area, -Average.Area) 
 test_wei.is.data<- Wei.transect.IS.data[rowSums(is.na(Wei.transect.IS.data)) > 0,]
 
 # Standardize name structure to: Date_type_ID_replicate_anythingextraOK) ----------------------------------------------------------------
@@ -223,7 +223,7 @@ ISTest_plot <- ggplot() +
   scale_fill_manual(values=c("white","dark gray")) +
   geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
   facet_wrap(~ MassFeature)
-#print(ISTest_plot)
+print(ISTest_plot)
 
 
 # Return data that is normalized via BMIS----------------------------------------------------------------
@@ -235,7 +235,7 @@ Wei.transect.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalB
   filter(MIS == FinalBMIS) %>%
   unique() 
 
-#write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct29.csv")
+#write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCNov4.csv")
 
 
 
