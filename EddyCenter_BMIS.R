@@ -43,7 +43,7 @@ Wei.eddycenter <- Wei.eddycenter %>%
   select(Metabolite.name, ReplicateName, Area, Area.with.QC, Column) %>%
   mutate(Metabolite.name = ifelse(str_detect(Metabolite.name, "Ingalls_"), sapply(strsplit(Metabolite.name, "_"), `[`, 2), Metabolite.name))
 
-cut.off <- 0.4 # 40% decrease in RSD of pooled injections, aka improvement cutoff
+cut.off <- 0.3 # % decrease in RSD of pooled injections, aka improvement cutoff
 cut.off2 <- 0.1 # RSD minimum
 
 # Match eddycenter data with Internal Standards list -----------------------------------------------------------------
@@ -80,7 +80,7 @@ IS_inspectPlot <- ggplot(Wei.eddycenter.IS.data, aes(x = ReplicateName, y = Area
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-#print(IS_inspectPlot)
+print(IS_inspectPlot)
 
 
 # Edit data so names match-----------------------------------------------------------------
@@ -218,12 +218,12 @@ print(ISTest_plot)
 
 
 ## original
-Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+Wei.eddycenter.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.eddycenter.mydata_new, by = "MassFeature") %>%
   filter(MIS == FinalBMIS) %>%
   unique() 
 
-#write.csv(Wei.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct29.csv")
+write.csv(Wei.eddycenter.BMIS_normalizedData, file = "~/Downloads/Wei_Eddycenter_BMISd_withQC_fixValine.csv")
 
 
 

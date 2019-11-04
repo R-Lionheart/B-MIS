@@ -1,4 +1,4 @@
-Hello! Welcome to the world of QE Quality Control! Minimum area for a real peak: 1000. RT flexibility: 0.4. Blank can be this fraction of a sample: 0.3. S/N ratio: 4. Parts per million flexibility: 7. Processed on: 2019-11-01 13:31:33. 
+Hello! Welcome to the world of QE Quality Control! Minimum area for a real peak: 1000. RT flexibility: 0.4. Blank can be this fraction of a sample: 0.3. S/N ratio: 4. Parts per million flexibility: 7. Processed on: 2019-11-04 09:26:21. 
 "Replicate.Name","Mass.Feature","Retention.Time","Area","Background","Height","Mass.Error.PPM","Column","SN.Flag","area.min.Flag","ppm.Flag","RT.Flag","blank.Flag","all.Flags","Area.with.QC"
 "180205_Std_4uMStdsInH2O_1","Acetyl-L-carnitine",7.46,3183409408,36679612,"132830464",-2.8,"HILICPos",NA,NA,NA,NA,NA,"",3183409408
 "180205_Std_4uMStdsInH2O_2","Acetyl-L-carnitine",7.36,2638594304,31567094,"109837736",-3.3,"HILICPos",NA,NA,NA,NA,NA,"",2638594304

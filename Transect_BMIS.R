@@ -17,7 +17,11 @@ options(scipen=999)
 
 # Imports -----------------------------------------------------------------
 
-Wei.transect.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") 
+Wei.transect.SampKey_all <- read.csv("data/Sample.Key.EddyTransect.csv") %>%
+  mutate(Sample.Name = Sample.Name %>%
+           str_replace("-","."))
+Wei.transect.SampKey_all[Wei.transect.SampKey_all == "180821_Poo_MesoScopeQC_1a"] <- "180821_Poo_MesoScopeQC_1"
+
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
   filter(Column == "HILIC") %>%
   filter(Compound.Type == "Internal Standard") 
@@ -42,7 +46,7 @@ Wei.transect <- Wei.transect %>%
   mutate(SNValue = as.numeric(SNValue)) %>% 
   mutate(Metabolite.name = ifelse(str_detect(Metabolite.name, "Ingalls_"), sapply(strsplit(Metabolite.name, "_"), `[`, 2), Metabolite.name))
 
-cut.off <- 0.4 # 40% decrease in RSD of pooled injections, aka improvement cutoff
+cut.off <- 0.3 # 40% decrease in RSD of pooled injections, aka improvement cutoff
 cut.off2 <- 0.1 # RSD minimum
 
 # Match transect data with Internal Standards list -----------------------------------------------------------------
@@ -84,7 +88,7 @@ IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.w
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-print(IS_inspectPlot)
+#print(IS_inspectPlot)
 
 
 # Edit data so names match-----------------------------------------------------------------
@@ -99,10 +103,13 @@ Wei.transect.long  <- Wei.transect.NoIS %>%
   arrange(ReplicateName)
 Wei.transect.long$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.long$ReplicateName)
 
-test_IS.data <- unique(Wei.transect.IS.data$ReplicateName)
-test_long.data <- unique(Wei.transect.long$ReplicateName)
-all.equal(test_IS.data, test_long.data)
+# Test that names are equal
+test_IS.data <- as.data.frame(unique(Wei.transect.IS.data$ReplicateName))
+test_IS.data <- test_IS.data %>% mutate(ReplicateName = as.character(unique(Wei.transect.IS.data$ReplicateName)))
+test_long.data <- as.data.frame(unique(Wei.transect.long$ReplicateName))
+test_long.data <- test_long.data %>% mutate(ReplicateName = as.character(unique(Wei.transect.long$ReplicateName)))
 
+identical(test_IS.data$ReplicateName, test_long.data$ReplicateName)
 
 # Caluclate mean values for each IS----------------------------------------------------------------
 Wei.transect.IS.means <- Wei.transect.IS.data %>% 
@@ -134,9 +141,9 @@ for (i in 1:length(unique(Wei.transect.IS.data$MassFeature))) {
 }
 
 
-Wei.transect.area.norm <- do.call(rbind, Split_Dat) %>% 
-  select(-IS_Area, -Average.Area) 
-
+Wei.transect.area.norm <- do.call(rbind, Split_Dat) # %>% 
+  #select(-IS_Area, -Average.Area) 
+test_wei.is.data<- Wei.transect.IS.data[rowSums(is.na(Wei.transect.IS.data)) > 0,]
 
 # Standardize name structure to: Date_type_ID_replicate_anythingextraOK) ----------------------------------------------------------------
 Wei.transect.mydata_new <- Wei.transect.area.norm %>% 
@@ -216,19 +223,19 @@ ISTest_plot <- ggplot() +
   scale_fill_manual(values=c("white","dark gray")) +
   geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
   facet_wrap(~ MassFeature)
-print(ISTest_plot)
+#print(ISTest_plot)
 
 
 # Return data that is normalized via BMIS----------------------------------------------------------------
 
 
 ## original
-Wei.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
+Wei.transect.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.transect.mydata_new, by = "MassFeature") %>%
   filter(MIS == FinalBMIS) %>%
   unique() 
 
-write.csv(Wei.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct29.csv")
+#write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCOct29.csv")
 
 
 
