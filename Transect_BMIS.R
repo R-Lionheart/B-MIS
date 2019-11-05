@@ -1,4 +1,3 @@
-library(cowplot)
 library(data.table)
 library(ggplot2)
 library(parallel)
@@ -8,7 +7,7 @@ options(scipen=999)
 
 ## This BMIS is for Wei's Eddy Transect data.
 
-# Things to return 
+# Things to return
 # IS_inspectPlot (plot to make sure there aren't any internal standards we should kick out)
 # QuickReport (% that picked BMIS, with cut off values)
 # ISTest_plot (plot to evaluate if you cut off is appropriate)
@@ -24,15 +23,15 @@ Wei.transect.SampKey_all[Wei.transect.SampKey_all == "180821_Poo_MesoScopeQC_1a"
 
 Wei.Internal.Standards <- read.csv("data/Ingalls_Lab_Standards.csv") %>%
   filter(Column == "HILIC") %>%
-  filter(Compound.Type == "Internal Standard") 
+  filter(Compound.Type == "Internal Standard")
 
 trimws(Wei.Internal.Standards$Compound.Name, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
 
 
 # HILICPos and HILICNeg data
-Wei.transect <- read.csv("data/Wei_Transect_HILICPosNeg_QC.csv", header = TRUE) %>% 
+Wei.transect <- read.csv("data/Wei_Transect_HILICPosNeg_QC.csv", header = TRUE) %>%
   slice(-1:-6) %>%
-  select(-c(Description, Value)) 
+  select(-c(Description, Value))
 
 
 # Change class + adjust data. Set cutoff values -----------------------------------------------------------------
@@ -43,18 +42,18 @@ Wei.transect <- Wei.transect %>%
   mutate(Metabolite.name = as.character(Metabolite.name)) %>%
   mutate(RTValue = as.numeric(RTValue)) %>%
   mutate(AreaValue = as.numeric(AreaValue)) %>%
-  mutate(SNValue = as.numeric(SNValue)) %>% 
+  mutate(SNValue = as.numeric(SNValue)) %>%
   mutate(Metabolite.name = ifelse(str_detect(Metabolite.name, "Ingalls_"), sapply(strsplit(Metabolite.name, "_"), `[`, 2), Metabolite.name))
 
-cut.off <- 0.3 # 40% decrease in RSD of pooled injections, aka improvement cutoff
+cut.off <- 0.3 # 30% decrease in RSD of pooled injections, aka improvement cutoff
 cut.off2 <- 0.1 # RSD minimum
 
 # Match transect data with Internal Standards list -----------------------------------------------------------------
 Wei.transect.withIS <- Wei.transect %>%
-  filter(Metabolite.name %in% Wei.Internal.Standards$Compound.Name) 
+  filter(Metabolite.name %in% Wei.Internal.Standards$Compound.Name)
 
 Wei.transect.NoIS <- Wei.transect %>%
-  filter(!Metabolite.name %in% Wei.Internal.Standards$Compound.Name) 
+  filter(!Metabolite.name %in% Wei.Internal.Standards$Compound.Name)
 
 
 # Read in Internal Standard data -----------------------------------------------------------------
@@ -62,7 +61,7 @@ Wei.transect.NoIS <- Wei.transect %>%
 Wei.transect.IS.data <- Wei.transect.withIS %>%
   select(ReplicateName, Metabolite.name, Area.with.QC) %>%
   mutate(MassFeature = Metabolite.name) %>%
-  select(-Metabolite.name) 
+  select(-Metabolite.name)
 
 Wei.transect.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.IS.data$ReplicateName)
 
@@ -74,16 +73,16 @@ Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
          ReplicateName = Sample.Name) %>%
   select(ReplicateName, Area.with.QC, MassFeature)
 
-Wei.transect.IS.data <- rbind(Wei.transect.IS.data, Wei.transect.SampKey) 
+Wei.transect.IS.data <- rbind(Wei.transect.IS.data, Wei.transect.SampKey)
 
 IS_Issues <- Wei.transect.IS.data[is.na(Wei.transect.IS.data$Area.with.QC),]
 
 
 # Extraction replication of Internal Standards -----------------------------------------------------------------
-IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.with.QC)) + 
-  geom_bar(stat = "identity") + 
+IS_inspectPlot <- ggplot(Wei.transect.IS.data, aes(x = ReplicateName, y = Area.with.QC)) +
+  geom_bar(stat = "identity") +
   facet_wrap( ~MassFeature, scales = "free_y") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5, size = 5), 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5, size = 5),
         axis.text.y = element_text(size = 10),
         legend.position = "top",
         strip.text = element_text(size = 10))+
@@ -92,7 +91,7 @@ print(IS_inspectPlot)
 
 
 # Edit data so names match-----------------------------------------------------------------
-Wei.transect.IS.data <- Wei.transect.IS.data %>% 
+Wei.transect.IS.data <- Wei.transect.IS.data %>%
   mutate(ReplicateName = ReplicateName %>%
            str_replace("-",".")) %>%
   arrange(ReplicateName)
@@ -112,7 +111,7 @@ test_long.data <- test_long.data %>% mutate(ReplicateName = as.character(unique(
 identical(test_IS.data$ReplicateName, test_long.data$ReplicateName)
 
 # Caluclate mean values for each IS----------------------------------------------------------------
-Wei.transect.IS.means <- Wei.transect.IS.data %>% 
+Wei.transect.IS.means <- Wei.transect.IS.data %>%
   filter(!grepl("_Blk_", ReplicateName)) %>%
   mutate(MassFeature = as.factor(MassFeature)) %>%
   group_by(MassFeature) %>%
@@ -130,54 +129,54 @@ Wei.transect.binded <- rbind(Wei.transect.IS.data, Wei.transect.long) %>%
 Split_Dat <- list()
 
 for (i in 1:length(unique(Wei.transect.IS.data$MassFeature))) {
-  Split_Dat[[i]] <- Wei.transect.binded %>% 
+  Split_Dat[[i]] <- Wei.transect.binded %>%
     mutate(MIS = unique(Wei.transect.IS.data$MassFeature)[i]) %>%
-    left_join(Wei.transect.IS.data %>% 
-                rename(MIS = MassFeature, IS_Area = Area.with.QC) %>% 
+    left_join(Wei.transect.IS.data %>%
+                rename(MIS = MassFeature, IS_Area = Area.with.QC) %>%
                 select(MIS, ReplicateName, IS_Area), by = c("ReplicateName", "MIS")) %>%
-    left_join(Wei.transect.IS.means %>% 
+    left_join(Wei.transect.IS.means %>%
                 rename(MIS = MassFeature), by = "MIS") %>%
     mutate(Adjusted_Area = Area.with.QC/IS_Area*Average.Area)
 }
 
 
-Wei.transect.area.norm <- do.call(rbind, Split_Dat) %>% 
-  select(-IS_Area, -Average.Area) 
+Wei.transect.area.norm <- do.call(rbind, Split_Dat) %>%
+  select(-IS_Area, -Average.Area)
 test_wei.is.data<- Wei.transect.IS.data[rowSums(is.na(Wei.transect.IS.data)) > 0,]
 
 # Standardize name structure to: Date_type_ID_replicate_anythingextraOK) ----------------------------------------------------------------
-Wei.transect.mydata_new <- Wei.transect.area.norm %>% 
+Wei.transect.mydata_new <- Wei.transect.area.norm %>%
   separate(ReplicateName, c("runDate", "type", "SampID", "replicate"), "_") %>%
   mutate(Run.Cmpd = paste(Wei.transect.area.norm$ReplicateName, Wei.transect.area.norm$MassFeature))
 
 
 # Find the B-MIS for each MassFeature----------------------------------------------------------------
 
-# Look only at the Pooled samples, to get a lowest RSD of the pooled possible (RSD_ofPoo), 
-# then choose which IS reduces the RSD the most (Poo.Picked.IS) 
+# Look only at the Pooled samples, to get a lowest RSD of the pooled possible (RSD_ofPoo),
+# then choose which IS reduces the RSD the most (Poo.Picked.IS)
 Wei.transect.poodat <- Wei.transect.mydata_new %>%
   filter(type == "Poo") %>%
   group_by(SampID, MassFeature, MIS) %>%
   summarise(RSD_ofPoo_IND = sd(Adjusted_Area, na.rm = TRUE) / mean(Adjusted_Area, na.rm = TRUE)) %>%
-  mutate(RSD_ofPoo_IND = ifelse(RSD_ofPoo_IND == "NaN", NA, RSD_ofPoo_IND)) %>% 
+  mutate(RSD_ofPoo_IND = ifelse(RSD_ofPoo_IND == "NaN", NA, RSD_ofPoo_IND)) %>%
   group_by(MassFeature, MIS) %>%
   summarise(RSD_ofPoo =  mean(RSD_ofPoo_IND, na.rm = TRUE)) %>%
   mutate(RSD_ofPoo = ifelse(RSD_ofPoo == "NaN", NA, RSD_ofPoo)) # New addition to transform NaNs to NAs
-  
 
-Wei.transect.poodat <- Wei.transect.poodat %>% 
+
+Wei.transect.poodat <- Wei.transect.poodat %>%
   left_join(Wei.transect.poodat %>% group_by(MassFeature) %>%
               summarise(Poo.Picked.IS = unique(MIS)[which.min(RSD_ofPoo)] [1]))
 
 
 # Get the original RSD, calculate RSD change, decide if MIS is acceptable----------------------------------------------------------------
 Wei.transect.poodat <- left_join(Wei.transect.poodat, Wei.transect.poodat %>%
-                      filter(MIS == "Inj_vol" ) %>%
-                      mutate(Orig_RSD = RSD_ofPoo) %>%
-                      select(-RSD_ofPoo, -MIS)) %>%
+                                   filter(MIS == "Inj_vol" ) %>%
+                                   mutate(Orig_RSD = RSD_ofPoo) %>%
+                                   select(-RSD_ofPoo, -MIS)) %>%
   mutate(del_RSD = (Orig_RSD - RSD_ofPoo)) %>%
   mutate(percentChange = del_RSD/Orig_RSD) %>%
-  mutate(accept_MIS = (percentChange > cut.off & Orig_RSD > cut.off2)) 
+  mutate(accept_MIS = (percentChange > cut.off & Orig_RSD > cut.off2))
 
 
 # Change the BMIS to "Inj_vol" if the BMIS is not an acceptable----------------------------------------------------------------
@@ -188,18 +187,18 @@ Wei.transect.poodat <- left_join(Wei.transect.poodat, Wei.transect.poodat %>%
 Wei.transect.fixedpoodat <- Wei.transect.poodat %>%
   filter(MIS == Poo.Picked.IS) %>% # If not commented out, this line filters out all but three compounds.
   mutate(FinalBMIS = ifelse(accept_MIS == "FALSE", "Inj_vol", Poo.Picked.IS)) %>%
-  mutate(FinalRSD = RSD_ofPoo) 
+  mutate(FinalRSD = RSD_ofPoo)
 
-Wei.newpoodat <- Wei.transect.poodat %>% 
+Wei.newpoodat <- Wei.transect.poodat %>%
   left_join(Wei.transect.fixedpoodat %>% select(MassFeature, FinalBMIS)) %>%
   filter(MIS == FinalBMIS) %>%
   mutate(FinalRSD = RSD_ofPoo)
 
-Try <- Wei.newpoodat %>% 
+Try <- Wei.newpoodat %>%
   filter(FinalBMIS != "Inj_vol")
 
-QuickReport <- print(paste("% of MFs that picked a BMIS", 
-                           length(Try$MassFeature) / length(Wei.newpoodat$MassFeature), 
+QuickReport <- print(paste("% of MFs that picked a BMIS",
+                           length(Try$MassFeature) / length(Wei.newpoodat$MassFeature),
                            "RSD improvement cutoff", cut.off,
                            "RSD minimum cutoff", cut.off2,
                            sep = " "))
@@ -211,15 +210,15 @@ IS_toISdat <- Wei.transect.mydata_new %>%
   select(MassFeature, MIS, Adjusted_Area, type) %>%
   filter(type == "Smp") %>%
   group_by(MassFeature, MIS) %>%
-  summarise(RSD_ofSmp = sd(Adjusted_Area)/mean(Adjusted_Area)) %>%
+  summarise(RSD_ofSmp = sd(Adjusted_Area, na.rm = TRUE)/mean(Adjusted_Area, na.rm = TRUE)) %>%
   left_join(Wei.transect.poodat %>% select(MassFeature, MIS, RSD_ofPoo, accept_MIS))
 
 injectONlY_toPlot <- IS_toISdat %>%
-  filter(MIS == "Inj_vol") 
+  filter(MIS == "Inj_vol")
 
 
 ISTest_plot <- ggplot() +
-  geom_point(dat = IS_toISdat, shape = 21, color = "black", size = 2,aes(x = RSD_ofPoo, y = RSD_ofSmp, fill = accept_MIS)) + 
+  geom_point(dat = IS_toISdat, shape = 21, color = "black", size = 2,aes(x = RSD_ofPoo, y = RSD_ofSmp, fill = accept_MIS)) +
   scale_fill_manual(values=c("white","dark gray")) +
   geom_point(dat = injectONlY_toPlot, aes(x = RSD_ofPoo, y = RSD_ofSmp), size = 3) +
   facet_wrap(~ MassFeature)
@@ -228,15 +227,12 @@ print(ISTest_plot)
 
 # Return data that is normalized via BMIS----------------------------------------------------------------
 
-
 ## original
 Wei.transect.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.transect.mydata_new, by = "MassFeature") %>%
   filter(MIS == FinalBMIS) %>%
-  unique() 
+  unique()
 
 #write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCNov4.csv")
-
-
 
 
