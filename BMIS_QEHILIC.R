@@ -74,7 +74,7 @@ IS_inspectPlot <- ggplot(IS.dat, aes(x = Replicate.Name, y = Area)) +
         legend.position = "top",
         strip.text = element_text(size = 10))+
   ggtitle("IS Raw Areas")
-#print(IS_inspectPlot)
+print(IS_inspectPlot)
 
 
 ## Edit data so names match

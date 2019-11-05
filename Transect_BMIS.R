@@ -61,7 +61,8 @@ Wei.transect.NoIS <- Wei.transect %>%
 Wei.transect.IS.data <- Wei.transect.withIS %>%
   select(ReplicateName, Metabolite.name, Area.with.QC) %>%
   mutate(MassFeature = Metabolite.name) %>%
-  select(-Metabolite.name)
+  select(-Metabolite.name) %>%
+  filter(!MassFeature == "Guanosine Monophosphate, 15N5")
 
 Wei.transect.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.IS.data$ReplicateName)
 
