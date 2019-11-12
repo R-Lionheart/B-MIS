@@ -7,6 +7,14 @@ options(scipen=999)
 
 ## This BMIS is for Wei's Eddy Transect data.
 
+
+## TODO 
+# Function for transforming variables and standardizing column names.
+# Feature for dropping troublesome compounds, ie Guanosine Monophosphate. Will need to have a 'preliminary' run to identify those troublesome compounds.
+# Handle the positive and negative internal standard DDA compounds. How to best filter out those compounds that shouldn't be plotted in a positive graph?
+# Clarify the QuickReport section. Add it to the final output or somehow zip them together so that information is accessible.
+
+
 # Things to return
 # IS_inspectPlot (plot to make sure there aren't any internal standards we should kick out)
 # QuickReport (% that picked BMIS, with cut off values)
@@ -64,6 +72,7 @@ Wei.transect.IS.data <- Wei.transect.withIS %>%
   select(-Metabolite.name) %>%
   filter(!MassFeature == "Guanosine Monophosphate, 15N5")
 
+# Drop syntactically correct "X" at start of ReplicateName.
 Wei.transect.IS.data$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.IS.data$ReplicateName)
 
 Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
@@ -76,6 +85,7 @@ Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
 
 Wei.transect.IS.data <- rbind(Wei.transect.IS.data, Wei.transect.SampKey)
 
+# Identify internal standards without an Area, i.e. any NA values.
 IS_Issues <- Wei.transect.IS.data[is.na(Wei.transect.IS.data$Area.with.QC),]
 
 
@@ -101,6 +111,8 @@ Wei.transect.long  <- Wei.transect.NoIS %>%
   rename(MassFeature = Metabolite.name) %>%
   select(ReplicateName, MassFeature, Area.with.QC) %>%
   arrange(ReplicateName)
+
+# Drop syntactically valid "X" from ReplicateName.
 Wei.transect.long$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.long$ReplicateName)
 
 # Test that names are equal
@@ -120,7 +132,6 @@ Wei.transect.IS.means <- Wei.transect.IS.data %>%
   mutate(MassFeature = as.character(MassFeature))
 
 Wei.transect.IS.means[is.na(Wei.transect.IS.means)] <- NA
-
 
 
 # Normalize to each internal Standard----------------------------------------------------------------
@@ -143,7 +154,6 @@ for (i in 1:length(unique(Wei.transect.IS.data$MassFeature))) {
 
 Wei.transect.area.norm <- do.call(rbind, Split_Dat) %>%
   select(-IS_Area, -Average.Area)
-test_wei.is.data<- Wei.transect.IS.data[rowSums(is.na(Wei.transect.IS.data)) > 0,]
 
 # Standardize name structure to: Date_type_ID_replicate_anythingextraOK) ----------------------------------------------------------------
 Wei.transect.mydata_new <- Wei.transect.area.norm %>%
@@ -186,7 +196,7 @@ Wei.transect.poodat <- left_join(Wei.transect.poodat, Wei.transect.poodat %>%
 # Changes the FinalBMIS to inject_volume if its no good
 
 Wei.transect.fixedpoodat <- Wei.transect.poodat %>%
-  filter(MIS == Poo.Picked.IS) %>% # If not commented out, this line filters out all but three compounds.
+  filter(MIS == Poo.Picked.IS) %>% 
   mutate(FinalBMIS = ifelse(accept_MIS == "FALSE", "Inj_vol", Poo.Picked.IS)) %>%
   mutate(FinalRSD = RSD_ofPoo)
 
@@ -234,6 +244,6 @@ Wei.transect.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalB
   filter(MIS == FinalBMIS) %>%
   unique()
 
-#write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQCNov4.csv")
+write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/FINAL_Wei_Transect_BMISd_withQC_Nov5.csv")
 
 

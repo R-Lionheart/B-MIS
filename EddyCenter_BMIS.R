@@ -78,7 +78,7 @@ IS_inspectPlot <- ggplot(Wei.eddycenter.IS.data, aes(x = ReplicateName, y = Area
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5, size = 5),
         axis.text.y = element_text(size = 10),
         legend.position = "top",
-        strip.text = element_text(size = 10))+
+        strip.text = element_text(size = 10)) +
   ggtitle("IS Raw Areas")
 print(IS_inspectPlot)
 
@@ -216,12 +216,10 @@ print(ISTest_plot)
 
 # Return data that is normalized via BMIS----------------------------------------------------------------
 
-
-## original
 Wei.eddycenter.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalBMIS, Orig_RSD, FinalRSD) %>%
   left_join(Wei.eddycenter.mydata_new, by = "MassFeature") %>%
   filter(MIS == FinalBMIS) %>%
   unique()
 
-write.csv(Wei.eddycenter.BMIS_normalizedData, file = "~/Downloads/Wei_Eddycenter_HILICPosNeg_BMISd_withQC_fixValine.csv")
+write.csv(Wei.eddycenter.BMIS_normalizedData, file = "~/Downloads/FINAL_Wei_Eddycenter_HILICPosNeg_BMISd_withQC_Nov5.csv")
 
