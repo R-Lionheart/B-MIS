@@ -1,6 +1,4 @@
-library(data.table)
 library(ggplot2)
-library(parallel)
 library(stringr)
 library(tidyverse)
 options(scipen=999)

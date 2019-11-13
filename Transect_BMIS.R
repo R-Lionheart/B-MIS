@@ -1,6 +1,4 @@
-library(data.table)
 library(ggplot2)
-library(parallel)
 library(stringr)
 library(tidyverse)
 options(scipen=999)
@@ -8,14 +6,16 @@ options(scipen=999)
 ## This BMIS is for Wei's Eddy Transect data.
 
 
-## TODO 
+## TODO: after initial eddy transect quantification.
+
 # Function for transforming variables and standardizing column names.
 # Feature for dropping troublesome compounds, ie Guanosine Monophosphate. Will need to have a 'preliminary' run to identify those troublesome compounds.
 # Handle the positive and negative internal standard DDA compounds. How to best filter out those compounds that shouldn't be plotted in a positive graph?
 # Clarify the QuickReport section. Add it to the final output or somehow zip them together so that information is accessible.
+# Check Betaine and high numbers for BMIS plot. Just a combination of low IS_Area and high Area.with.QC?
 
+# Things to Return --------------------------------------------------------
 
-# Things to return
 # IS_inspectPlot (plot to make sure there aren't any internal standards we should kick out)
 # QuickReport (% that picked BMIS, with cut off values)
 # ISTest_plot (plot to evaluate if you cut off is appropriate)
@@ -84,6 +84,10 @@ Wei.transect.SampKey <- Wei.transect.SampKey_all %>%
   select(ReplicateName, Area.with.QC, MassFeature)
 
 Wei.transect.IS.data <- rbind(Wei.transect.IS.data, Wei.transect.SampKey)
+# THIS REMOVAL OF DDA SAMPLES IS ADDED AS A STOPGAP MEASURE- NEEDS TO BE FIXED!!! ##
+Wei.transect.IS.data <- Wei.transect.IS.data %>%
+  filter(!grepl("DDA", ReplicateName)) 
+# THIS REMOVAL OF DDA SAMPLES IS ADDED AS A STOPGAP MEASURE- NEEDS TO BE FIXED!!! ##
 
 # Identify internal standards without an Area, i.e. any NA values.
 IS_Issues <- Wei.transect.IS.data[is.na(Wei.transect.IS.data$Area.with.QC),]
@@ -117,10 +121,14 @@ Wei.transect.long$ReplicateName <- gsub("^.{0,1}", "", Wei.transect.long$Replica
 
 # Test that names are equal
 test_IS.data <- as.data.frame(unique(Wei.transect.IS.data$ReplicateName))
-test_IS.data <- test_IS.data %>% mutate(ReplicateName = as.character(unique(Wei.transect.IS.data$ReplicateName)))
+test_IS.data <- test_IS.data %>% 
+  mutate(ReplicateName = as.character(unique(Wei.transect.IS.data$ReplicateName)))
 test_long.data <- as.data.frame(unique(Wei.transect.long$ReplicateName))
-test_long.data <- test_long.data %>% mutate(ReplicateName = as.character(unique(Wei.transect.long$ReplicateName)))
+test_long.data <- test_long.data %>% 
+  mutate(ReplicateName = as.character(unique(Wei.transect.long$ReplicateName))) %>%
+  filter(!grepl("DDA", ReplicateName)) 
 
+# This is being manually forced to identical() == TRUE because of DDA removal. 
 identical(test_IS.data$ReplicateName, test_long.data$ReplicateName)
 
 # Caluclate mean values for each IS----------------------------------------------------------------
@@ -244,6 +252,6 @@ Wei.transect.BMIS_normalizedData <- Wei.newpoodat %>% select(MassFeature, FinalB
   filter(MIS == FinalBMIS) %>%
   unique()
 
-write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/FINAL_Wei_Transect_BMISd_withQC_Nov5.csv")
+write.csv(Wei.transect.BMIS_normalizedData, file = "~/Downloads/Wei_Transect_BMISd_withQC_Nov13.csv")
 
 
